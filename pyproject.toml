@@ -1,0 +1,22 @@
+[tool.poetry]
+name = 'ps-bot'
+version = '0.1.0'
+description = ''
+authors = ['kaifariat-team']
+readme = 'README.md'
+
+[tool.poetry.dependencies]
+python = '^3.12'
+pydantic = '^2.7.1'
+alembic = '^1.13.1'
+sqlalchemy = '^2.0.29'
+python-telegram-bot = '^21.1.1'
+python-dotenv = '^1.0.1'
+cryptography = "^42.0.5"
+aiosqlite = "^0.20.0"
+greenlet = "^3.0.3"
+
+
+[build-system]
+requires = ['poetry-core']
+build-backend = 'poetry.core.masonry.api'
