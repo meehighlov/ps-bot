@@ -5,6 +5,7 @@ from cryptography.fernet import Fernet
 from ps_bot.config import config
 from ps_bot.database.entities.account import Account
 from ps_bot.database.entities.enums import KeyCodeStatusEnum
+from ps_bot.database.entities.game import Game
 from ps_bot.database.entities.key_code import KeyCode
 from ps_bot.database.session import invoke_session
 
@@ -32,3 +33,15 @@ async def save_account_to_db(session, data: dict) -> Account:
         session.add(key_code)
 
     return account
+
+
+async def add_game_to_db(session, data: dict, name: str, description: str) -> Game:
+
+    game = Game(
+        game_id=str(uuid.uuid4()),
+        name=data['name'],
+        description=data['description'])
+
+    session.add(game)
+
+    return game

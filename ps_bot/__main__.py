@@ -6,6 +6,8 @@ from ps_bot.handlers import (
     create_account_buttons_handler,
     create_account_conversation_handler,
     help_handler,
+    add_game_handler,
+    add_game_buttons_handler
 )
 
 logger = logging.getLogger(__name__)
@@ -15,6 +17,8 @@ handlers = [
     create_account_buttons_handler,
     create_account_conversation_handler,
     help_handler,
+    add_game_handler,
+    add_game_buttons_handler
 ]
 
 app = create_app(handlers=handlers)

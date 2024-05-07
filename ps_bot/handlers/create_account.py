@@ -16,7 +16,7 @@ from ps_bot.config import config
 from ps_bot.database.queries.db_calls import save_account_to_db
 
 from ps_bot.exception import do_default_reply_on_any_error
-
+from ps_bot.handlers.add_game import handle_button_press_v2
 
 logger = logging.getLogger(__name__)
 
@@ -112,23 +112,23 @@ async def accept_codes(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     return CHECK_STEP
 
 
-@do_default_reply_on_any_error
-async def handle_button_press(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    query = update.callback_query
-
-    await query.answer()
-
-    if query.data == SAVE_BUTTON:
-        context.user_data["user_id"] = update.effective_user.id
-        await save_account_to_db(data=context.user_data)
-        await update.effective_chat.send_message("Аккаунт создан ✅")
-
-    if query.data == RESTART_BUTTON:
-        await update.effective_chat.send_message("Нажми /create_account чтобы начать заново")
-
-    # очищаем кеш, это важно сделать, чтобы не текла память
-    context.user_data.clear()
-    await query.edit_message_reply_markup(reply_markup=None)
+# @do_default_reply_on_any_error
+# async def handle_button_press(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+#     query = update.callback_query
+#
+#     await query.answer()
+#
+#     if query.data == SAVE_BUTTON:
+#         context.user_data["user_id"] = update.effective_user.id
+#         await save_account_to_db(data=context.user_data)
+#         await update.effective_chat.send_message("Аккаунт создан ✅")
+#
+#     if query.data == RESTART_BUTTON:
+#         await update.effective_chat.send_message("Нажми /create_account чтобы начать заново")
+#
+#     # очищаем кеш, это важно сделать, чтобы не текла память
+#     context.user_data.clear()
+#     await query.edit_message_reply_markup(reply_markup=None)
 
 
 async def fallback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -148,4 +148,4 @@ create_account_conversation_handler = ConversationHandler(
     conversation_timeout=config.bot.conversation_timeout_sec,
 )
 
-create_account_buttons_handler = CallbackQueryHandler(handle_button_press)
+create_account_buttons_handler = CallbackQueryHandler(handle_button_press_v2)
