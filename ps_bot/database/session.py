@@ -49,6 +49,7 @@ def invoke_session(func: Callable):
             logger.info(f'Exception occurred {e}, rolling back...')
             await scoped_session.rollback()
             logger.info(f'Transaction rolled back.')
+            raise
         finally:
             await scoped_session.close()
 

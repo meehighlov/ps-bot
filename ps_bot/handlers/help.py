@@ -10,7 +10,8 @@ async def help_(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = [
             'Доступные команды:', '\n\n',
             '/create_account', '\n'
-            '/add_game',
+            '/add_game', '\n'
+            '/list_account',
         ]
 
     message = "".join(message)
