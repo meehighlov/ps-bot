@@ -21,7 +21,7 @@ _engine = create_async_engine(f"sqlite+aiosqlite:///{config.db.sqlite_path}", ec
 
 async_session_factory = async_sessionmaker(
     _engine,
-    expire_on_commit=False,
+    expire_on_commit=True,
 )
 AsyncScopedSession = async_scoped_session(
     async_session_factory,

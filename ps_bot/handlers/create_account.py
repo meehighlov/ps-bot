@@ -1,6 +1,5 @@
 import logging
 
-from cryptography.fernet import Fernet
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     CommandHandler,
@@ -8,7 +7,6 @@ from telegram.ext import (
     ConversationHandler,
     MessageHandler,
     filters,
-    CallbackQueryHandler,
 )
 
 from ps_bot.auth import auth
@@ -16,7 +14,7 @@ from ps_bot.config import config
 from ps_bot.database.queries.db_calls import save_account_to_db
 
 from ps_bot.exception import do_default_reply_on_any_error
-from ps_bot.handlers.add_game import handle_button_press_v2
+from ps_bot.handlers.enums import ButtonStatesEnum
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +22,7 @@ logger = logging.getLogger(__name__)
 ACCEPT_LOGIN = 1
 ACCEPT_PASSWORD = 2
 ACCEPT_CODES = 3
-CHECK_STEP = 4
-
-SAVE_BUTTON = "1"
-RESTART_BUTTON = "2"
+END = -1
 
 
 @auth
@@ -77,11 +72,11 @@ def build_keyboard() -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton(
                 text="Сохранить 💾",
-                callback_data=SAVE_BUTTON,
+                callback_data=ButtonStatesEnum.CREATE_ACCOUNT_SAVE,
             ),
             InlineKeyboardButton(
                 text="Заполнить заново 🔁",
-                callback_data=RESTART_BUTTON,
+                callback_data=ButtonStatesEnum.CREATE_ACCOUNT_RESTART,
             ),
         ],
     ]
@@ -109,26 +104,33 @@ async def accept_codes(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     )
     await update.message.reply_text(message, reply_markup=build_keyboard())
 
-    return CHECK_STEP
+    return END
 
 
-# @do_default_reply_on_any_error
-# async def handle_button_press(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-#     query = update.callback_query
-#
-#     await query.answer()
-#
-#     if query.data == SAVE_BUTTON:
-#         context.user_data["user_id"] = update.effective_user.id
-#         await save_account_to_db(data=context.user_data)
-#         await update.effective_chat.send_message("Аккаунт создан ✅")
-#
-#     if query.data == RESTART_BUTTON:
-#         await update.effective_chat.send_message("Нажми /create_account чтобы начать заново")
-#
-#     # очищаем кеш, это важно сделать, чтобы не текла память
-#     context.user_data.clear()
-#     await query.edit_message_reply_markup(reply_markup=None)
+async def handle_button_save_press(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+
+    await query.answer()
+
+    context.user_data["user_id"] = update.effective_user.id
+    await save_account_to_db(data=context.user_data)
+    await update.effective_chat.send_message("Аккаунт создан ✅")
+
+    # очищаем кеш, это важно сделать, чтобы не текла память
+    context.user_data.clear()
+    await query.edit_message_reply_markup(reply_markup=None)
+
+
+async def handle_button_retry_press(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+
+    await query.answer()
+
+    await update.effective_chat.send_message("Нажми /create_account чтобы начать заново")
+
+    # очищаем кеш, это важно сделать, чтобы не текла память
+    context.user_data.clear()
+    await query.edit_message_reply_markup(reply_markup=None)
 
 
 async def fallback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -144,8 +146,11 @@ create_account_conversation_handler = ConversationHandler(
         ACCEPT_CODES: [MessageHandler(filters.TEXT, accept_codes)],
     },
     fallbacks=[MessageHandler(filters.TEXT, fallback)],
-    allow_reentry=True,
+    allow_reentry=False,
     conversation_timeout=config.bot.conversation_timeout_sec,
 )
 
-create_account_buttons_handler = CallbackQueryHandler(handle_button_press_v2)
+account_buttons = {
+    ButtonStatesEnum.CREATE_ACCOUNT_SAVE: handle_button_save_press,
+    ButtonStatesEnum.CREATE_ACCOUNT_RESTART: handle_button_retry_press,
+}

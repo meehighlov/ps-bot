@@ -8,16 +8,13 @@ from telegram.ext import (
     ConversationHandler,
     MessageHandler,
     filters,
-    CallbackQueryHandler,
 )
 from ps_bot.config import config
+from ps_bot.handlers.enums import ButtonStatesEnum
 
-ACCEPT_GAME_NAME = 1
-ADD_GAME_DESCRIPTION = 2
-END = 3
-
-SAVE = "1"
-RESTART = "2"
+ACCEPT_GAME_NAME = 4
+ADD_GAME_DESCRIPTION = 5
+END = -1
 
 
 def build_keyboard() -> InlineKeyboardMarkup:
@@ -25,11 +22,11 @@ def build_keyboard() -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton(
                 text="Сохранить 💾",
-                callback_data=SAVE,
+                callback_data=ButtonStatesEnum.ADD_GAME_SAVE,
             ),
             InlineKeyboardButton(
                 text="Заполнить заново 🔁",
-                callback_data=RESTART,
+                callback_data=ButtonStatesEnum.ADD_GAME_RESTART,
             ),
         ],
     ]
@@ -82,19 +79,26 @@ async def add_description_for_game(update: Update, context: ContextTypes.DEFAULT
     return END
 
 
-@do_default_reply_on_any_error
-async def handle_button_press_v2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_button_save_press(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
 
     await query.answer()
 
-    if query.data == SAVE:
-        context.user_data["user_id"] = update.effective_user.id
-        await add_game_to_db(data=context.user_data)
-        await update.effective_chat.send_message("Игра успешно добавлена ✅")
+    context.user_data["user_id"] = update.effective_user.id
+    await add_game_to_db(data=context.user_data)
+    await update.effective_chat.send_message("Игра успешно добавлена ✅")
 
-    if query.data == RESTART:
-        await update.effective_chat.send_message("Нажми /add_game чтобы начать заново")
+    # очищаем кеш, это важно сделать, чтобы не текла память
+    context.user_data.clear()
+    await query.edit_message_reply_markup(reply_markup=None)
+
+
+async def handle_button_retry_press(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+
+    await query.answer()
+
+    await update.effective_chat.send_message("Нажми /add_game чтобы начать заново")
 
     # очищаем кеш, это важно сделать, чтобы не текла память
     context.user_data.clear()
@@ -110,11 +114,14 @@ add_game_handler = ConversationHandler(
     entry_points=[CommandHandler("add_game", add_game)],
     states={
         ACCEPT_GAME_NAME: [MessageHandler(filters.TEXT, accept_game_name)],
-        ADD_GAME_DESCRIPTION: [MessageHandler(filters.TEXT, add_description_for_game)]},
-
+        ADD_GAME_DESCRIPTION: [MessageHandler(filters.TEXT, add_description_for_game)]
+    },
     fallbacks=[MessageHandler(filters.TEXT, fallback)],
-    allow_reentry=True,
+    allow_reentry=False,
     conversation_timeout=config.bot.conversation_timeout_sec,
 )
 
-add_game_buttons_handler = CallbackQueryHandler(handle_button_press_v2)
+game_buttons = {
+    ButtonStatesEnum.ADD_GAME_SAVE: handle_button_save_press,
+    ButtonStatesEnum.ADD_GAME_RESTART: handle_button_retry_press,
+}

@@ -35,7 +35,8 @@ async def save_account_to_db(session, data: dict) -> Account:
     return account
 
 
-async def add_game_to_db(session, data: dict, name: str, description: str) -> Game:
+@invoke_session
+async def add_game_to_db(session, data: dict) -> Game:
 
     game = Game(
         game_id=str(uuid.uuid4()),
