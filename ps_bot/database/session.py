@@ -37,7 +37,7 @@ def invoke_session(func: Callable):
     :return: function call result
     """
 
-    @wraps(invoke_session)
+    @wraps(func)
     async def wrapper(*args, **kwargs):
         scoped_session = AsyncScopedSession()
 

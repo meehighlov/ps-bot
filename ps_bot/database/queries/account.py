@@ -3,14 +3,14 @@ import uuid
 from sqlalchemy import select
 from ps_bot.database.entities.account import Account
 from ps_bot.database.entities.enums import KeyCodeStatusEnum
-from ps_bot.database.entities.game import Game
 from ps_bot.database.entities.key_code import KeyCode
 from ps_bot.database.session import invoke_session
+from ps_bot.models.account import AccountModel
 from ps_bot.services.factories.factories import get_cryptography_password_utils
 
 
 @invoke_session
-async def save_account_to_db(session, data: dict) -> Account:
+async def save_account_to_db(session, data: dict) -> AccountModel:
     cryptography_password_utils = get_cryptography_password_utils()
     encrypted_password = cryptography_password_utils.encrypt(data["password"])
 
@@ -31,23 +31,10 @@ async def save_account_to_db(session, data: dict) -> Account:
 
         session.add(key_code)
 
-    return account
+    return AccountModel.from_orm(account)
 
 
 @invoke_session
-async def add_game_to_db(session, data: dict) -> Game:
-
-    game = Game(
-        game_id=str(uuid.uuid4()),
-        name=data['name'],
-        description=data['description'])
-
-    session.add(game)
-
-    return game
-
-
-@invoke_session
-async def get_list_account(session) -> list[Account]:
+async def get_list_account(session) -> list[AccountModel]:
     result = await session.execute(select(Account))
-    return result.scalars().all()
+    return [AccountModel.from_orm(acc) for acc in result.scalars().all()]

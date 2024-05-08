@@ -1,5 +1,5 @@
 from ps_bot.auth import auth
-from ps_bot.database.queries.db_calls import add_game_to_db
+from ps_bot.database.queries.game import add_game_to_db
 from ps_bot.exception import do_default_reply_on_any_error
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -51,7 +51,7 @@ async def add_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 @do_default_reply_on_any_error
 async def accept_game_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     game = update.message.text
-    context.user_data["game"] = game
+    context.user_data["name"] = game
 
     message = (
         "Отлично! "
@@ -67,7 +67,7 @@ async def add_description_for_game(update: Update, context: ContextTypes.DEFAULT
     description = update.message.text
     context.user_data["description"] = description
 
-    game = context.user_data["game"]
+    game = context.user_data["name"]
 
     message = (
         "Отлично! проверь, все ли верно? 🤔\n\n"
