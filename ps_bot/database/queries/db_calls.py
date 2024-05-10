@@ -1,6 +1,7 @@
 import uuid
 
 from cryptography.fernet import Fernet
+from sqlalchemy import select
 
 from ps_bot.config import config
 from ps_bot.database.entities.account import Account
@@ -40,9 +41,16 @@ async def add_game_to_db(session, data: dict) -> Game:
 
     game = Game(
         game_id=str(uuid.uuid4()),
-        name=data['name'],
-        description=data['description'])
+        game_name=data['game'],
+        game_description=data['description'])
 
     session.add(game)
 
     return game
+
+
+@invoke_session
+async def get_list_games(session) -> list[Game]:
+    query = select(Game)
+    result = await session.execute(query)
+    return result.scalars().all()
