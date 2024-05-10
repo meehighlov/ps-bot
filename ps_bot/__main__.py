@@ -6,7 +6,9 @@ from ps_bot.handlers.buttons import button_press_handler
 from ps_bot.handlers.create_account import account_buttons, create_account_conversation_handler
 from ps_bot.handlers.games.get_list_games import get_list_games_handler
 from ps_bot.handlers.help import help_handler
+from ps_bot.handlers.list_account import list_account_handler
 from ps_bot.handlers.start import start_handler
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +23,7 @@ handlers = [
     help_handler,
     add_game_handler,
     button_press_handler(button_handlers=button_handlers),
+    list_account_handler,
     get_list_games_handler
 ]
 

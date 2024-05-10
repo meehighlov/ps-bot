@@ -1,25 +1,26 @@
 import uuid
 
-from cryptography.fernet import Fernet
 from sqlalchemy import select
+from cryptography.fernet import Fernet
 
 from ps_bot.config import config
 from ps_bot.database.entities.account import Account
 from ps_bot.database.entities.enums import KeyCodeStatusEnum
-from ps_bot.database.entities.game import Game
 from ps_bot.database.entities.key_code import KeyCode
 from ps_bot.database.session import invoke_session
+from ps_bot.models.account import AccountModel
+from ps_bot.services.factories.factories import get_cryptography_password_utils
 
 
 @invoke_session
-async def save_account_to_db(session, data: dict) -> Account:
-    fernet = Fernet(config.bot.crypt_key.encode())
-    password = fernet.encrypt(data["password"].encode())
+async def save_account_to_db(session, data: dict) -> AccountModel:
+    cryptography_password_utils = get_cryptography_password_utils()
+    encrypted_password = cryptography_password_utils.encrypt(data["password"])
 
     account = Account(
         account_id=str(uuid.uuid4()),
         account_login=data["login"],
-        account_password=password.decode(),
+        account_password=encrypted_password,
     )
     session.add(account)
 
@@ -33,20 +34,13 @@ async def save_account_to_db(session, data: dict) -> Account:
 
         session.add(key_code)
 
-    return account
+    return AccountModel.from_orm(account)
 
 
 @invoke_session
-async def add_game_to_db(session, data: dict) -> Game:
-
-    game = Game(
-        game_id=str(uuid.uuid4()),
-        game_name=data['game'],
-        game_description=data['description'])
-
-    session.add(game)
-
-    return game
+async def get_list_account(session) -> list[AccountModel]:
+    result = await session.execute(select(Account))
+    return [AccountModel.from_orm(acc) for acc in result.scalars().all()]
 
 
 @invoke_session

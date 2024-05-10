@@ -11,7 +11,7 @@ from telegram.ext import (
 
 from ps_bot.auth import auth
 from ps_bot.config import config
-from ps_bot.database.queries.db_calls import save_account_to_db
+from ps_bot.database.queries.account import save_account_to_db
 
 from ps_bot.exception import do_default_reply_on_any_error
 from ps_bot.handlers.enums import ButtonStatesEnum
