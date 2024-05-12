@@ -31,6 +31,7 @@ class BotConfig(BaseSettings):
     owners: list[str]
     conversation_timeout_sec: int = 120
     crypt_key: str
+    run_migrations: bool = True
 
 
 class DBConfig(BaseSettings):
