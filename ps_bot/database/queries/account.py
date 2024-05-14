@@ -6,6 +6,7 @@ from cryptography.fernet import Fernet
 from ps_bot.config import config
 from ps_bot.database.entities.account import Account
 from ps_bot.database.entities.enums import KeyCodeStatusEnum
+from ps_bot.database.entities.game import Game
 from ps_bot.database.entities.key_code import KeyCode
 from ps_bot.database.session import invoke_session
 from ps_bot.models.account import AccountModel
@@ -41,10 +42,3 @@ async def save_account_to_db(session, data: dict) -> AccountModel:
 async def get_list_account(session) -> list[AccountModel]:
     result = await session.execute(select(Account))
     return [AccountModel.from_orm(acc) for acc in result.scalars().all()]
-
-
-@invoke_session
-async def get_list_games(session) -> list[Game]:
-    query = select(Game)
-    result = await session.execute(query)
-    return result.scalars().all()
